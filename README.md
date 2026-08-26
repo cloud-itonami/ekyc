@@ -2,6 +2,20 @@
 
 eKYC (electronic Know Your Customer) project — Clerk-integrated identity verification with MCP integration for APQC 12.4.5 KYC workflows.
 
+**What is actually in this tree today** is a single package,
+`appview/ekyc-mcp-component/`, containing an MCP JSON-RPC facade (backend
+TypeScript, unaffected by the note below) and — as of 2026-08-26 — a
+ClojureScript frontend at `appview/ekyc-mcp-component/cljs/` (shadow-cljs +
+reagent + re-frame + jp-go-dds), migrated from the previous
+`appview/ekyc-mcp-component/svelte/` (Svelte 5 + Vite) scaffold. The
+migration was a faithful, functionality-preserving port: the Svelte scaffold
+rendered only a heading and a status paragraph, and the ClojureScript
+version does the same. The rest of the architecture description below
+(DoDAF performers, K8s/mage deployment, proto/gRPC service, `cdn/`/`wasm/`/
+`legacy-runtime/` paths) predates this migration, does not match the actual
+tree (see `migration.edn` / `appview/README.md`), and is **not** addressed
+by this change — only the frontend build chain is.
+
 ## Architecture (DoDAF v2)
 
 ### Capability (CV-1)
@@ -78,7 +92,8 @@ SvelteKit eKYC frontend with Clerk authentication.
 - MCP workflow status display
 
 **Tech Stack:**
-- SvelteKit (SSG mode, adapter-static)
+- ClojureScript (shadow-cljs + reagent + re-frame + jp-go-dds), migrated
+  from SvelteKit 2026-08-26 — see `appview/ekyc-mcp-component/cljs/`
 - Clerk JS SDK
 - Connect-gRPC web client (placeholder, uses fetch for now)
 
@@ -108,13 +123,13 @@ mage Deploy
 ### Deploy ekyc-ui (Static frontend)
 
 ```bash
-cd 60-apps/etzhayyim-project-ekyc/wasm/ekyc-ui-hzaooy0f/svelte/
+cd appview/ekyc-mcp-component/cljs/
 
 # Install dependencies
-pnpm install
+npm install
 
-# Build SvelteKit SSG
-pnpm build
+# Build (shadow-cljs release, output to public/js/)
+npm run release
 
 # Deploy to K8s via current mage flow
 mage Deploy
