@@ -1,20 +1,67 @@
 # etzhayyim-project-ekyc
 
-eKYC (electronic Know Your Customer) project — Clerk-integrated identity verification with MCP integration for APQC 12.4.5 KYC workflows.
+eKYC (electronic Know Your Customer) — Clerk-integrated identity
+verification with MCP integration for APQC 12.4.5 KYC workflows.
 
-**What is actually in this tree today** is a single package,
-`appview/ekyc-mcp-component/`, containing an MCP JSON-RPC facade (backend
-TypeScript, unaffected by the note below) and — as of 2026-08-26 — a
-ClojureScript frontend at `appview/ekyc-mcp-component/cljs/` (shadow-cljs +
-reagent + re-frame + jp-go-dds), migrated from the previous
-`appview/ekyc-mcp-component/svelte/` (Svelte 5 + Vite) scaffold. The
-migration was a faithful, functionality-preserving port: the Svelte scaffold
-rendered only a heading and a status paragraph, and the ClojureScript
-version does the same. The rest of the architecture description below
-(DoDAF performers, K8s/mage deployment, proto/gRPC service, `cdn/`/`wasm/`/
-`legacy-runtime/` paths) predates this migration, does not match the actual
-tree (see `migration.edn` / `appview/README.md`), and is **not** addressed
-by this change — only the frontend build chain is.
+**This repository implements none of that yet.** Read the next section
+before the architecture below it.
+
+## What is actually in this tree
+
+25 tracked files. Two runnable packages, neither of which does any identity
+verification:
+
+| Path | What it is | State |
+|---|---|---|
+| `appview/ekyc-mcp-component/` | TypeScript package for the MCP JSON-RPC facade | `package.json` sets `"main": "src/app.ts"`; **`src/` does not exist**. Its one test is `expect(true).toBe(true)` |
+| `appview/ekyc-mcp-component/cljs/` | ClojureScript appview — shadow-cljs + reagent + re-frame + `jp-go-dds` | Builds and runs. Renders one heading and one status line. 4 tests, 6 assertions, green |
+
+Everything else is metadata (`PROJECT.jsonld`, `README.edn`,
+`kotodama.jsonld`, `NOTICE`, `OWNERS`, `migration.edn`) and documentation.
+
+To build and test it, see [`docs/operator-quickstart.md`](docs/operator-quickstart.md),
+which lists only commands that were actually run and what they printed.
+
+### What is designed but not built
+
+The architecture below describes a system that does not exist in this
+repository, at paths that are not in it:
+
+- `legacy-runtime/ekyc-service-ephj2jf6/` — absent
+- `cdn/ekyc-ui-hzaooy0f/` — absent
+- `internal/ocr/`, `internal/liveness/`, `internal/verification/`,
+  `internal/server/` — absent
+- `proto/v1/ekyc.proto` — absent
+- `wasm/` — absent
+
+The deployment commands in [Deployment](#deployment) (`buf generate`,
+`mage Deploy`) operate on those directories and cannot be run here.
+
+This is not deletion. `PROJECT.jsonld` in this directory lists all seven
+build tasks as `"status": "pending"`, and the extraction manifest
+`migration.edn` records that 23 files were brought from `etzhayyim/root` —
+which is the set present. The design was never implemented at the source
+either. Evidence:
+[ADR 0001](docs/adr/0001-implementation-status-was-never-true-of-this-tree.md).
+
+`IMPLEMENTATION_STATUS.md` previously presented parts of this as complete,
+including five ticked security controls. It has been corrected; see the
+same ADR.
+
+### Frontend stack
+
+The appview was migrated from Svelte 5 + Vite to ClojureScript on
+2026-08-26 (workspace standard: cljs + reagent + re-frame + `jp-go-dds`).
+The port was faithful and functionality-preserving — the Svelte scaffold
+rendered a heading and a status paragraph, and the ClojureScript version
+renders the same. It added no eKYC behaviour, because there was none to
+carry over.
+
+---
+
+**Everything from here down is the original design document, retained as
+the only surviving record of the intended system. Read it in the future
+tense.**
 
 ## Architecture (DoDAF v2)
 
@@ -34,6 +81,9 @@ by this change — only the frontend build chain is.
 - **APQC 12.4.5 KYC performer** — MCP integration target (`etzhayyim-performer-sys-etzhayyim-actors-pba7d22f-svc-apqc-12-4-5-kyc-v2`)
 
 ### Services (SvcV-1)
+
+Neither service is deployed; the host below is NXDOMAIN as of 2026-08-30.
+
 | Service | Type | Protocol | URL |
 |---|---|---|---|
 | ekyc-service | XRPC MCP | XRPC (HTTP/2) | `ekyc.etzhayyim.com` |
@@ -52,9 +102,9 @@ User (Browser) → Clerk Auth → ekyc-ui (SvelteKit)
 
 ## Components
 
-### legacy-runtime/ekyc-service-ephj2jf6
+### legacy-runtime/ekyc-service-ephj2jf6 (not present)
 
-gRPC eKYC service with Clerk JWT validation and MCP integration.
+Designed as a gRPC eKYC service with Clerk JWT validation and MCP integration.
 
 **Features:**
 - Clerk JWKS-based JWT authentication
@@ -80,9 +130,9 @@ APP_GRPC_ENDPOINT=http://shared-ekyc-service-legacy-runtime:50001
 - 8080: XRPC server
 - 9090: Prometheus `/metrics`
 
-### cdn/ekyc-ui-hzaooy0f
+### cdn/ekyc-ui-hzaooy0f (not present)
 
-SvelteKit eKYC frontend with Clerk authentication.
+Designed as an eKYC frontend with Clerk authentication.
 
 **Features:**
 - Clerk JS SDK authentication
@@ -91,15 +141,24 @@ SvelteKit eKYC frontend with Clerk authentication.
 - Verification status tracking
 - MCP workflow status display
 
-**Tech Stack:**
-- ClojureScript (shadow-cljs + reagent + re-frame + jp-go-dds), migrated
-  from SvelteKit 2026-08-26 — see `appview/ekyc-mcp-component/cljs/`
+**Tech stack, as designed:**
 - Clerk JS SDK
-- Connect-gRPC web client (placeholder, uses fetch for now)
+- Connect-gRPC web client
 
-**URL:** `https://ekyc.etzhayyim.com`
+The ClojureScript appview that *does* exist,
+`appview/ekyc-mcp-component/cljs/`, is not this component. It shares the
+stack the workspace standardises on (shadow-cljs + reagent + re-frame +
+`jp-go-dds`, migrated from Svelte on 2026-08-26) and none of the features
+listed above.
+
+**URL, as designed:** `https://ekyc.etzhayyim.com` — **does not resolve**
+(NXDOMAIN, checked 2026-08-30). The service table above names the same host.
 
 ## Deployment
+
+**Not runnable in this tree** — the directories and the `buf` / `mage`
+toolchain these steps use are absent. For what does run, see
+[`docs/operator-quickstart.md`](docs/operator-quickstart.md).
 
 ### Deploy ekyc-service (XRPC backend)
 
@@ -261,14 +320,20 @@ ekyc-service integrates with APQC 12.4.5 KYC performer via MCP:
 - KEDA scale-to-zero efficiency (target: <5s cold start)
 - MCP workflow completion rate (target: >99%)
 
-## Security
+## Security, as designed
 
-- **Clerk JWT authentication** — All XRPC requests require valid Clerk JWT
-- **Org-scoped access** — Users can only view verifications for their org
-- **Admin role check** — UpdateVerificationStatus requires `org:admin` role
-- **JWKS rotation** — JWKS keys refreshed every hour
-- **service mesh mTLS** — All legacy runtime component communication encrypted
-- **KEDA scale-to-zero** — Reduces attack surface when idle
+**None of these is implemented in this repository**, which contains no
+authentication, authorisation or transport security of any kind. They are
+requirements on the system described above, not properties of this tree,
+and must not be cited as operating controls. See
+[ADR 0001](docs/adr/0001-implementation-status-was-never-true-of-this-tree.md).
+
+- **Clerk JWT authentication** — every XRPC request to require a valid Clerk JWT
+- **Org-scoped access** — users to see only their own org's verifications
+- **Admin role check** — `UpdateVerificationStatus` to require `org:admin`
+- **JWKS rotation** — JWKS keys to refresh hourly
+- **Service mesh mTLS** — inter-component traffic to be encrypted
+- **KEDA scale-to-zero** — to reduce attack surface when idle
 
 ## Next Steps
 
