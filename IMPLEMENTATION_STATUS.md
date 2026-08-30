@@ -1,10 +1,30 @@
-# eKYC Implementation Status
+# eKYC implementation status
 
-## ✅ Completed Tasks
+> **Nothing described in this document is implemented in this repository.**
+>
+> This tree is 22 files: metadata, four READMEs, a ClojureScript scaffold
+> that renders a heading and a status line, and a TypeScript package whose
+> `package.json` points `"main"` at a `src/app.ts` that does not exist. None
+> of the Go packages named below (`internal/ocr/`, `internal/liveness/`,
+> `internal/verification/`, `internal/server/`) is present, and neither is
+> `proto/`, `legacy-runtime/` or `cdn/`.
+>
+> This is not deletion — the code was never here. `PROJECT.jsonld` in this
+> same directory lists all seven build tasks as `"status": "pending"`, and
+> the extraction manifest `migration.edn` records that exactly 23 files were
+> brought over from `etzhayyim/root`, which is the set we have. See
+> [ADR 0001](docs/adr/0001-implementation-status-was-never-true-of-this-tree.md)
+> for the evidence.
+>
+> Until that changes, read everything below as **design**: what was intended,
+> at the level of detail it was worked out to. It is retained because it is
+> the only surviving record of that design. It is not a report of work done.
 
-### 1. Self-Hosted OCR Engine (`internal/ocr/engine.go`)
+## Designed: document verification pipeline
 
-**Implementation:**
+### OCR engine — designed for `internal/ocr/engine.go` (absent)
+
+**Design:**
 - Tesseract OCR integration (`gosseract/v2`)
 - Multi-language support (English + Japanese)
 - Document-specific parsers:
@@ -33,9 +53,9 @@ github.com/otiai10/gosseract/v2 v2.4.1
 - Tesseract OCR 4.x+ (`/usr/share/tesseract-ocr/4.00/tessdata`)
 - Language data: `eng.traineddata`, `jpn.traineddata`
 
-### 2. Self-Hosted Liveness Detection (`internal/liveness/detector.go`)
+### Liveness detection — designed for `internal/liveness/detector.go` (absent)
 
-**Implementation:**
+**Design:**
 - OpenCV-based face/eye detection (`gocv`)
 - Haar Cascade classifiers
 - Anti-spoofing checks:
@@ -66,9 +86,9 @@ gocv.io/x/gocv v0.35.0
   - `/usr/share/opencv4/haarcascades/haarcascade_frontalface_default.xml`
   - `/usr/share/opencv4/haarcascades/haarcascade_eye.xml`
 
-### 3. Integrated Verification Engine (`internal/verification/verifier.go`)
+### Integrated verification engine — designed for `internal/verification/verifier.go` (absent)
 
-**Updated to use OCR + Liveness:**
+**Design, composing the two above:**
 - `NewVerifier()` — Initializes OCR engine + liveness detector
 - `VerifyDocuments()` — 6 comprehensive checks:
   1. Front image quality
@@ -79,13 +99,12 @@ gocv.io/x/gocv v0.35.0
   6. Authenticity placeholder
 - `VerifyLiveness()` — Face + gesture + anti-spoofing + device checks
 
-## 🚧 In Progress
+## Designed: APQC KYC MCP integration
 
-### 3. APQC KYC MCP Integration
+**Status:** not started. The file this was to live in,
+`internal/server/mcp_client.go`, does not exist.
 
-**Status:** Partially implemented in `internal/server/mcp_client.go`
-
-**TODO:**
+**Remaining work as originally scoped:**
 - Implement real XRPC calls to APQC 12.4.5 KYC performer
 - Pass verification data as MCP CallTool arguments
 - Poll workflow status via ReadResource
@@ -102,7 +121,10 @@ etzhayyim-performer-sys-etzhayyim-actors-pba7d22f-svc-apqc-12-4-5-kyc-v2:8080
 - `approve_kyc` — Admin approval action
 - `reject_kyc` — Admin rejection action
 
-## 📝 Pending Tasks
+## Designed: not started
+
+The sections above are also not started; these were simply never claimed
+otherwise.
 
 ### 4. eKYC Admin Dashboard
 
@@ -286,9 +308,9 @@ ENTRYPOINT ["/usr/local/bin/ekyc-service"]
 - Add `@rules_foreign_cc` for native library builds
 - Add system dependencies for Tesseract + OpenCV
 
-## Next Immediate Steps
+## Next steps as originally scoped
 
-1. ✅ Complete APQC MCP integration (real XRPC calls)
+1. Complete APQC MCP integration (real XRPC calls)
 2. Create admin dashboard UI
 3. Implement audit logging
 4. Add webhook system
@@ -305,19 +327,31 @@ ENTRYPOINT ["/usr/local/bin/ekyc-service"]
 | KEDA cold start | <5s | TBD |
 | Success rate | >95% | TBD |
 
-## Security Checklist
+## Security controls
 
-- [x] Clerk JWT authentication
-- [x] Org-scoped access control
-- [x] Admin role verification
-- [x] JWKS rotation (1 hour)
-- [x] service mesh mTLS
-- [ ] Audit logging (pending)
-- [ ] Webhook HMAC signatures (pending)
-- [ ] Rate limiting (pending)
-- [ ] DDoS protection (pending)
+**None of these is implemented in this repository, and none should be
+counted as an operating control on the basis of this file.** They were
+previously listed with the first five marked `[x]`; there is no
+authentication, access control or transport security in a tree whose only
+running code renders a heading. If these controls exist, they exist in some
+other system, and recording them here attributed that system's posture to
+this one.
 
-## Compliance Checklist (for production)
+Planned, all unimplemented:
+
+- Clerk JWT authentication
+- Org-scoped access control
+- Admin role verification
+- JWKS rotation (1 hour)
+- Service mesh mTLS
+- Audit logging
+- Webhook HMAC signatures
+- Rate limiting
+- DDoS protection
+
+## Compliance obligations (for production)
+
+Every box below is unchecked and correct: none has been assessed.
 
 - [ ] GDPR compliance (data retention, right to erasure)
 - [ ] eIDAS compliance (EU digital identity)
