@@ -1,10 +1,11 @@
 # Operator quickstart
 
-**Every command in this file was run, in this order, on a checkout of `main`
-at `3499af6` — the commit this change is based on — on 2026-08-30, and
-re-run on the finished tree.** The output quoted under each step is
-what it actually printed. If a step is not listed here, this document does
-not claim it works — see [What this document does not
+**Every command in this file was run, in this order, on 2026-08-30 — first
+on the tree these docs were written in, then again in a fresh
+`git clone` of the pushed branch, which reproduced each result.** The
+release build was byte-identical across the two (`app.js`, 359,412 bytes).
+The output quoted under each step is what it actually printed. If a step is
+not listed here, this document does not claim it works — see [What this document does not
 verify](#what-this-document-does-not-verify) at the bottom.
 
 Read [What is actually in this tree](../README.md#what-is-actually-in-this-tree)
@@ -31,6 +32,10 @@ npm install          # added 44 packages
 npm test             # vitest
 ```
 
+`npm install` here rewrites `package-lock.json` (+929 / −226 lines,
+reproducibly). Your tree will be dirty afterwards; that change is npm
+re-resolving the committed lockfile, not something you did.
+
 Observed:
 
 ```
@@ -53,14 +58,21 @@ npm install          # added 129 packages
 npm test             # shadow-cljs compile test && node out/tests.js
 ```
 
-Observed (first run compiles 111 files, ~102 s; later runs are cached):
+Observed:
 
 ```
 Ran 4 tests containing 6 assertions.
 0 failures, 0 errors.
 ```
 
-These four are real: they cover `:initialize-db` and the `:heading` /
+Compilation is 112 files / 111 compiled. How long that takes is dominated by
+what is already in your `~/.m2` and git dependency caches, not by this
+repository: **101.89 s** on a machine resolving them for the first time,
+**9.35 s** in a fresh clone on the same machine once they were warm. Both
+runs were on a workstation at load average ~49, so treat these as the shape
+of the cost, not as a benchmark.
+
+These four tests are real: they cover `:initialize-db` and the `:heading` /
 `:message` subscriptions in `src/ekyc/app.cljs`, and they read the db rather
 than asserting fixed strings, so they fail if the event or the subs are
 changed. They cover a two-line scaffold view — that is the whole of what
@@ -77,8 +89,8 @@ cd appview/ekyc-mcp-component/cljs
 npm run release      # rm -rf public/js && shadow-cljs release app
 ```
 
-Observed: `[:app] Build completed. (110 files, 39 compiled, 0 warnings, 171.24s)`,
-producing
+Observed: `[:app] Build completed. (110 files, 39 compiled, 0 warnings)` —
+171.24 s cold, 31.54 s warm, same caveat as above — producing
 
 ```
 public/js/app.js         359412 bytes
