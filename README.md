@@ -187,7 +187,7 @@ cd appview/ekyc-mcp-component/cljs/
 # Install dependencies
 npm install
 
-# Build (shadow-cljs release, output to public/js/)
+# Build (amu compile --target wasm32-browser, output to public/js/)
 npm run release
 
 # Deploy to K8s via current mage flow

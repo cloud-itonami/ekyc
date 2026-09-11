@@ -55,7 +55,7 @@ package currently carries no information about the product.
 ```bash
 cd appview/ekyc-mcp-component/cljs
 npm install          # added 129 packages
-npm test             # shadow-cljs compile test && node out/tests.js
+npm test             # amu compile --target wasm32-browser test && node out/tests.js
 ```
 
 Observed:
@@ -86,7 +86,7 @@ inside a component. They are warnings, not failures.
 
 ```bash
 cd appview/ekyc-mcp-component/cljs
-npm run release      # rm -rf public/js && shadow-cljs release app
+npm run release      # rm -rf public/js && amu compile --target wasm32-browser app
 ```
 
 Observed: `[:app] Build completed. (110 files, 39 compiled, 0 warnings)` —
